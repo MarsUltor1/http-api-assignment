@@ -5,7 +5,78 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    const handleResponse = (response) => {
+      const contentType = response.headers.get('Content-Type');
+      const content = document.querySelector('#content');
 
+      // create elements to hold title and message
+      const title = document.createElement('h1');
+      const message = document.createElement('p');
+      
+      // Set title based on response status code
+      switch (response.status) {
+        case 200:
+          title.innerText = "Success";
+          break;
+        case 400:
+          title.innerText = "Bad Request";
+          break;
+        case 401:
+          title.innerText = "Unauthorized";
+          break;
+        case 403:
+          title.innerText = "Forbidden";
+          break;
+        case 500:
+          title.innerText = "Internal Server Error";
+          break;
+        case 501:
+          title.innerText = "Not Implemented";
+          break;
+        default:
+          title.innerText = "Resource Not Found";
+          break;
+      }
+
+      // Set message to json or xml message
+      response.text().then((resTxt) => {
+        // Print response to console
+        console.log(resTxt);
+
+        // Set message wether it is json or xml
+        if (contentType === 'application/json') {
+          const parsedJSON = JSON.parse(resTxt);
+          message.innerText = `Message: ${parsedJSON.message}`;
+        }
+        else if (contentType === 'text/xml') {
+          const parsedXML = new window.DOMParser().parseFromString(resTxt, 'text/xml');
+          message.innerText = `Message: ${parsedXML.querySelector('message').textContent}`;
+        }
+      });
+      
+      // add title and message to content section
+      content.appendChild(title);
+      content.appendChild(message);
+    };
+
+    const sendFetchRequest = async () => {
+      // Geth url and type from form
+      let url = document.querySelector('#page').value;
+      let options = {
+        method: 'GET',
+        headers: { 'Accept': document.querySelector('#type').value },
+      };
+
+      // Send fetch with given url and options
+      return handleResponse(await fetch(url, options));
+    };
+
+    const init = () => {
+      // Add event to button
+      document.querySelector('#send').addEventListener('click', sendFetchRequest);
+    };
+
+    window.onload = init;
   </script>
 </head>
 <body>
